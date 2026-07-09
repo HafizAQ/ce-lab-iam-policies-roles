@@ -1,12 +1,13 @@
 # Lab: IAM Policies and Roles - Advanced Identity Management
 
-**Estimated Time:** 90 minutes  
-**Difficulty:** Intermediate  
-**Prerequisites:** IAM Users and Groups lab completed, AWS Console access
+**Estimated Time:** 90 minutes
+**Difficulty:** Intermediate
+**Prerequisites:** IAM Users and Groups lab completed, AWS Console access 
 
 ## Learning Objectives
 
 By the end of this lab, you will be able to:
+
 - Create and attach custom IAM policies
 - Understand policy structure and JSON syntax
 - Create and configure IAM roles
@@ -18,6 +19,7 @@ By the end of this lab, you will be able to:
 ## Scenario
 
 Your company needs more granular access control. The basic user groups are insufficient for the following requirements:
+
 - Developers need read-only S3 access to specific buckets only
 - EC2 instances need to access S3 without storing credentials
 - Lambda functions need specific permissions to write logs
@@ -28,6 +30,7 @@ You'll implement these requirements using custom IAM policies and roles.
 ## Lab Overview
 
 You will:
+
 1. Create custom IAM policies with specific permissions
 2. Attach policies to users and groups
 3. Create service roles for EC2 and Lambda
@@ -68,6 +71,7 @@ Every IAM policy contains these elements:
 ```
 
 **Key Components:**
+
 - **Version:** Policy language version (always "2012-10-17")
 - **Statement:** Array of permission statements
 - **Sid:** Optional statement ID (for organization)
@@ -127,6 +131,7 @@ Create a policy that allows read access only to a specific S3 bucket.
 **📸 Screenshot 1:** Created custom S3 policy
 
 **Using AWS CLI:**
+
 ```bash
 # Create policy JSON file first
 cat > s3-readonly-policy.json << 'EOF'
@@ -160,6 +165,7 @@ aws iam create-policy \
 Create a policy for users who can start/stop but not terminate EC2 instances.
 
 **Policy JSON:**
+
 ```json
 {
   "Version": "2012-10-17",
@@ -188,6 +194,7 @@ Create a policy for users who can start/stop but not terminate EC2 instances.
 ```
 
 **Create this policy:**
+
 1. IAM → Policies → Create policy
 2. Name: `EC2-StartStop-Only`
 3. Description: "Start, stop, and reboot EC2 but cannot terminate"
@@ -217,6 +224,7 @@ Policy for applications to write logs only.
 ```
 
 **Create this policy:**
+
 - Name: `CloudWatch-Logs-Write-Only`
 
 **📸 Screenshot 3:** CloudWatch Logs policy
@@ -230,6 +238,7 @@ Policy for applications to write logs only.
 Attach your S3 policy to a test user.
 
 **Steps:**
+
 1. Go to **IAM** → **Users**
 2. Select a user (or create `test-developer`)
 3. Click **Add permissions** → **Attach policies directly**
@@ -238,6 +247,7 @@ Attach your S3 policy to a test user.
 6. Click **Next** → **Add permissions**
 
 **Using CLI:**
+
 ```bash
 # First, get the policy ARN
 aws iam list-policies --scope Local --query 'Policies[?PolicyName==`S3-ReadOnly-SpecificBucket`].Arn' --output text
@@ -259,6 +269,7 @@ aws iam attach-user-policy \
 EC2 instances need to access S3 without storing credentials. Use IAM roles!
 
 **Create role:**
+
 1. Go to **IAM** → **Roles** → **Create role**
 2. Select **AWS service** → **EC2**
 3. Click **Next**
@@ -272,6 +283,7 @@ EC2 instances need to access S3 without storing credentials. Use IAM roles!
 **📸 Screenshot 5:** EC2 service role created
 
 **Using CLI:**
+
 ```bash
 # Create trust policy for EC2
 cat > ec2-trust-policy.json << 'EOF'
@@ -305,6 +317,7 @@ aws iam attach-role-policy \
 Lambda functions need specific permissions to run.
 
 **Create role:**
+
 1. IAM → Roles → Create role
 2. Select **AWS service** → **Lambda**
 3. Attach policies:
@@ -320,6 +333,7 @@ Lambda functions need specific permissions to run.
 Allow another AWS account to access your resources.
 
 **Trust policy for cross-account:**
+
 ```json
 {
   "Version": "2012-10-17",
@@ -341,6 +355,7 @@ Allow another AWS account to access your resources.
 ```
 
 **Create role (Console):**
+
 1. IAM → Roles → Create role
 2. Select **Another AWS account**
 3. Enter external account ID (use your own account ID for testing)
@@ -360,6 +375,7 @@ Allow another AWS account to access your resources.
 Test policies before applying them.
 
 **Steps:**
+
 1. Go to **IAM** → **Policies**
 2. Select your `S3-ReadOnly-SpecificBucket` policy
 3. Click **Actions** → **Simulate**
@@ -371,6 +387,7 @@ Test policies before applying them.
 9. Click **Run Simulation**
 
 **Expected Results:**
+
 - **GetObject:** ✅ Allowed
 - **PutObject:** ❌ Denied
 - **DeleteObject:** ❌ Denied
@@ -382,6 +399,7 @@ Test policies before applying them.
 Verify permissions with actual AWS CLI commands.
 
 **Test S3 read access:**
+
 ```bash
 # Assuming you're using test-developer credentials
 # List bucket (should work)
@@ -407,6 +425,7 @@ aws s3 cp s3://YOUR-BUCKET-NAME/somefile.txt ./
 Review and tighten your policies.
 
 **Example: Limit S3 access by IP address**
+
 ```json
 {
   "Version": "2012-10-17",
@@ -426,6 +445,7 @@ Review and tighten your policies.
 ```
 
 **Example: Limit actions to specific time window**
+
 ```json
 {
   "Version": "2012-10-17",
@@ -452,6 +472,7 @@ Review and tighten your policies.
 ### Step 12: Common IAM Issues
 
 **Issue 1: Access Denied**
+
 ```bash
 # Check effective permissions
 aws iam get-user-policy --user-name USERNAME --policy-name POLICY_NAME
@@ -464,6 +485,7 @@ aws iam simulate-principal-policy \
 ```
 
 **Issue 2: Role Not Assumable**
+
 ```bash
 # Check trust relationship
 aws iam get-role --role-name ROLE_NAME --query 'Role.AssumeRolePolicyDocument'
@@ -495,6 +517,7 @@ aws sts assume-role \
 ## Cleanup
 
 **Remove test resources:**
+
 ```bash
 # Detach policies from users
 aws iam detach-user-policy --user-name test-developer --policy-arn POLICY_ARN
@@ -511,12 +534,12 @@ aws iam delete-role --role-name EC2-S3-ReadOnly-Role
 
 ## Key Takeaways
 
-✅ **IAM Policies** define granular permissions using JSON  
-✅ **Service Roles** enable AWS services to access resources securely  
-✅ **Least Privilege** minimizes security risks  
-✅ **Policy Simulator** helps test before deployment  
-✅ **Trust Relationships** control who can assume roles  
-✅ **Conditions** add extra security layers  
+✅ **IAM Policies** define granular permissions using JSON
+✅ **Service Roles** enable AWS services to access resources securely
+✅ **Least Privilege** minimizes security risks
+✅ **Policy Simulator** helps test before deployment
+✅ **Trust Relationships** control who can assume roles
+✅ **Conditions** add extra security layers
 
 ---
 
